@@ -3,11 +3,20 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Register - Taste of Africa</title>
+    <title> Register - Taste of Africa </title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
+        .register-container {
+            background: rgba(255, 255, 255, 0.95);
+            /* semi-white box */
+            padding: 20px;
+            background-color: gainsboro;
+            border-radius: 10px;
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
         .btn-custom {
             background-color: #D19C97;
             border-color: #D19C97;
@@ -30,26 +39,18 @@
         }
 
         body {
-            background-color: #f8f9fa;
-            background-image:
-                repeating-linear-gradient(0deg,
-                    #b77a7a,
-                    #b77a7a 1px,
-                    transparent 1px,
-                    transparent 20px),
-                repeating-linear-gradient(90deg,
-                    #b77a7a,
-                    #b77a7a 1px,
-                    transparent 1px,
-                    transparent 20px),
-                linear-gradient(rgba(183, 122, 122, 0.1),
-                    rgba(183, 122, 122, 0.1));
+            background-image: linear-gradient(to bottom right, rgba(58, 166, 198, 1), rgba(0, 123, 255, 1));
+            background-attachment: fixed;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
             background-blend-mode: overlay;
             background-size: 20px 20px;
             min-height: 100vh;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: Serif, Times New Roman;
+            font-size: 109%;
         }
 
         .register-container {
