@@ -39,18 +39,17 @@
         }
 
         body {
-            background-image: linear-gradient(to bottom right, rgba(58, 166, 198, 1), rgba(0, 123, 255, 1));
+            background-color: rgb(58, 166, 198, 1);
             background-attachment: fixed;
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
-            background-blend-mode: overlay;
             background-size: 20px 20px;
             min-height: 100vh;
             margin: 0;
             padding: 0;
             font-family: Serif, Times New Roman;
-            font-size: 109%;
+            font-size: 115%;
         }
 
         .register-container {
