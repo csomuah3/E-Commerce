@@ -1,5 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+<?php
+// --- server-side handler (kept minimal) ---
+session_start();
+require_once __DIR__ . '/../controllers/user_controller.php';
+
+$reg_success = '';
+$reg_error   = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // read posted fields
+    $name         = trim($_POST['name']         ?? '');
+    $email        = trim($_POST['email']        ?? '');
+    $password     =        $_POST['password']   ?? '';
+    $phone_number = trim($_POST['phone_number'] ?? '');
+    $country      = trim($_POST['country']      ?? '');
+    $city         = trim($_POST['city']         ?? '');
+    $role         = (int)($_POST['role']        ?? 1);
+
+    // call your existing controller
+    $res = register_user_ctr($name, $email, $password, $phone_number, $country, $city, $role);
+
+    if (is_array($res) && ($res['status'] ?? '') === 'success') {
+        $reg_success = $res['message'] ?? 'Registration successful. You can now log in.';
+        // If you prefer an immediate redirect to login, uncomment:
+        // header('Location: login.php'); exit;
+    } else {
+        $reg_error = is_array($res) ? ($res['message'] ?? 'Registration failed') : 'Registration failed';
+    }
+}
+?>
 
 <head>
     <meta charset="UTF-8">
@@ -120,14 +150,32 @@
                         <h4>Register</h4>
                     </div>
                     <div class="card-body">
-                        <form id="register-form">
+
+                        <!-- Server-side alerts -->
+                        <?php if (!empty($reg_success)): ?>
+                            <div class="alert alert-success text-center" role="alert">
+                                <?= htmlspecialchars($reg_success) ?>
+                            </div>
+                        <?php endif; ?>
+                        <?php if (!empty($reg_error)): ?>
+                            <div class="alert alert-danger text-center" role="alert">
+                                <?= htmlspecialchars($reg_error) ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Client-side error (inline JS will use this) -->
+                        <div id="register-error" class="alert alert-danger text-center" style="display:none;" role="alert"></div>
+
+                        <!-- form: now posts to this same file -->
+                        <form id="register-form" method="POST" action="">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Full Name</label>
                                 <input type="text" id="name" name="name" class="form-control" required>
                             </div>
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email</label>
-                                <input type="email" id="email" name="email" class="form-control" required>
+                                <input type="text" id="email" name="email" class="form-control" required>
+
                             </div>
                             <div class="mb-3">
                                 <label for="password" class="form-label">Password</label>
@@ -184,7 +232,91 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script src="../js/register.js?v=9999"></script>
+    <!-- Commented out to stop the AJAX error popup; leaving it here (not deleted) -->
+    <!-- <script src="../js/register.js?v=9999"></script> -->
+
+    <!-- Inline JS (validation only; normal POST submit to PHP above) -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('register-form');
+            if (!form) return;
+
+            const nameEl = document.getElementById('name');
+            const emailEl = document.getElementById('email');
+            const passEl = document.getElementById('password');
+            const phoneEl = document.getElementById('phone_number');
+            const countryEl = document.getElementById('country');
+            const cityEl = document.getElementById('city');
+            const errorEl = document.getElementById('register-error');
+            const submitBtn = form.querySelector('button[type="submit"]');
+
+            const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+
+            function setError(msg) {
+                if (errorEl) {
+                    errorEl.textContent = msg;
+                    errorEl.style.display = 'block';
+                }
+            }
+
+            function clearError() {
+                if (errorEl) {
+                    errorEl.textContent = '';
+                    errorEl.style.display = 'none';
+                }
+            }
+
+            form.addEventListener('submit', function(e) {
+                clearError();
+
+                const name = nameEl.value.trim();
+                const email = emailEl.value.trim();
+                const pass = passEl.value;
+
+                if (!name) {
+                    e.preventDefault();
+                    setError('Full Name is required.');
+                    return;
+                }
+                // if (!emailRegex.test(email)) {
+                //     e.preventDefault();
+                //     setError('Please enter a valid email address.');
+                //     return;
+                // }
+                if (!pass) {
+                    e.preventDefault();
+                    setError('Password is required.');
+                    return;
+                }
+                if (pass.length < 6) {
+                    e.preventDefault();
+                    setError('Password must be at least 6 characters.');
+                    return;
+                }
+                if (!phoneEl.value.trim()) {
+                    e.preventDefault();
+                    setError('Phone Number is required.');
+                    return;
+                }
+                if (!countryEl.value) {
+                    e.preventDefault();
+                    setError('Please select your country.');
+                    return;
+                }
+                if (!cityEl.value.trim()) {
+                    e.preventDefault();
+                    setError('City is required.');
+                    return;
+                }
+
+                // Valid → allow normal POST to PHP at the top
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Creating account...';
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

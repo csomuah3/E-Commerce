@@ -178,7 +178,7 @@ class User extends db_connection
         }
     }
 
-    // GET user by email
+    // GET user by email - for login functionality
     public function getUserByEmail($email)
     {
         try {
@@ -190,10 +190,11 @@ class User extends db_connection
         }
     }
 
-    // LOGIN user
+    // LOGIN user - enhanced method that matches assignment requirements
     public function login($email, $password)
     {
         try {
+            // Get customer by email
             $sql = "SELECT * FROM customer WHERE customer_email = '" . mysqli_real_escape_string($this->db, $email) . "'";
             $user = $this->db_fetch_one($sql);
 
@@ -201,19 +202,57 @@ class User extends db_connection
                 return ['status' => 'error', 'message' => 'Invalid email or password'];
             }
 
+            // Check if password matches stored password
             if (password_verify($password, $user['customer_pass'])) {
+                // Start session if not already started
                 if (session_status() !== PHP_SESSION_ACTIVE) {
                     session_start();
                 }
-                $_SESSION['user_id']   = $user['customer_id'];
-                $_SESSION['user_name'] = $user['customer_name'];
-                $_SESSION['role']      = $user['user_role'];
-                return ['status' => 'success', 'message' => 'Login successful'];
-            }
 
-            return ['status' => 'error', 'message' => 'Invalid email or password'];
+                // Set session variables as required by assignment
+                $_SESSION['user_id'] = $user['customer_id'];
+                $_SESSION['role'] = $user['user_role'];
+                $_SESSION['name'] = $user['customer_name'];
+                $_SESSION['email'] = $user['customer_email'];
+
+                return [
+                    'status' => 'success',
+                    'message' => 'Login successful',
+                    'user_data' => $user
+                ];
+            } else {
+                return ['status' => 'error', 'message' => 'Invalid email or password'];
+            }
         } catch (Exception $e) {
             error_log("Login error: " . $e->getMessage());
+            return ['status' => 'error', 'message' => 'Login failed: ' . $e->getMessage()];
+        }
+    }
+
+    // Method to get customer by email and check password (as per assignment requirements)
+    public function getCustomerByEmailAndPassword($email, $password)
+    {
+        try {
+            // Get customer by email
+            $sql = "SELECT * FROM customer WHERE customer_email = '" . mysqli_real_escape_string($this->db, $email) . "'";
+            $customer = $this->db_fetch_one($sql);
+
+            if (!$customer) {
+                return ['status' => 'error', 'message' => 'Invalid email or password'];
+            }
+
+            // Check if password input matches the password stored
+            if (password_verify($password, $customer['customer_pass'])) {
+                return [
+                    'status' => 'success',
+                    'message' => 'Login successful',
+                    'user_data' => $customer
+                ];
+            } else {
+                return ['status' => 'error', 'message' => 'Invalid email or password'];
+            }
+        } catch (Exception $e) {
+            error_log("getCustomerByEmailAndPassword error: " . $e->getMessage());
             return ['status' => 'error', 'message' => 'Login failed: ' . $e->getMessage()];
         }
     }

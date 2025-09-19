@@ -1,22 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<?php
-session_start();
-require_once __DIR__ . '/../controllers/user_controller.php';
-
-$error = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email    = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $res = login_user_ctr($email, $password);
-    if ($res['status'] === 'success') {
-        header('Location: ../settings/index.php'); // or wherever your home is
-        exit;
-    } else {
-        $error = $res['message'];
-    }
-}
-?>
 
 <head>
     <meta charset="UTF-8">
@@ -47,10 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         body {
-            /* Base background color */
             background-color: #f8f9fa;
-
-            /* Gradient-like grid using repeating-linear-gradients */
             background-image:
                 repeating-linear-gradient(0deg,
                     #b77a7a,
@@ -64,14 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     transparent 20px),
                 linear-gradient(rgba(183, 122, 122, 0.1),
                     rgba(183, 122, 122, 0.1));
-
-            /* Blend the gradients for a subtle overlay effect */
             background-blend-mode: overlay;
-
-            /* Define the size of the grid */
             background-size: 20px 20px;
-
-            /* Ensure the background covers the entire viewport */
             min-height: 100vh;
             margin: 0;
             padding: 0;
@@ -112,24 +86,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        /* Additional Styling for Enhanced Appearance */
         .form-label i {
             margin-left: 5px;
             color: #b77a7a;
         }
 
-        .alert-info {
-            animation: fadeIn 1s;
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
+        .btn:disabled {
+            opacity: 0.6;
         }
     </style>
 </head>
@@ -139,41 +107,143 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="row justify-content-center animate__animated animate__fadeInDown">
             <div class="col-md-6">
                 <div class="card animate__animated animate__zoomIn">
-                    <div class="card-header text-center highlight">
+                    <div class="card-header text-center">
                         <h4>Login</h4>
                     </div>
                     <div class="card-body">
-                        <!-- Alert Messages (To be handled by backend) -->
-                        <!-- Example:
-                        <div class="alert alert-info text-center">Login successful!</div>
-                        -->
-
-                        <form method="POST" action="" class="mt-4" id="login-form">
+                        <form id="login-form">
                             <div class="mb-3">
                                 <label for="email" class="form-label">Email <i class="fa fa-envelope"></i></label>
-                                <input type="email" class="form-control animate__animated animate__fadeInUp" id="email" name="email" required>
+                                <input type="email" id="email" name="email" class="form-control animate__animated animate__fadeInUp" required>
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">Password <i class="fa fa-lock"></i></label>
-                                <input type="password" class="form-control animate__animated animate__fadeInUp" id="password" name="password" required>
+                                <input type="password" id="password" name="password" class="form-control animate__animated animate__fadeInUp" required>
+                                <small class="text-muted">Password must be at least 6 characters</small>
                             </div>
                             <button type="submit" class="btn btn-custom w-100 animate-pulse-custom">Login</button>
                         </form>
                     </div>
                     <div class="card-footer text-center">
-                        Don't have an account? <a href="register.php" class="highlight">Register here</a>.
+                        Don't have an account? <a href="register.php" class="highlight">Register here</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="../js/login.js"></script>
 
+    <script>
+        $(document).ready(function() {
+            $('#login-form').submit(function(e) {
+                e.preventDefault();
 
+                // Get form values
+                var email = $('#email').val().trim();
+                var password = $('#password').val();
+
+                console.log('=== LOGIN ATTEMPT ===');
+                console.log('Email:', email);
+
+                // Basic validation
+                if (email === '' || password === '') {
+                    Swal.fire({
+                        title: 'Validation Error',
+                        text: 'Please fill in all fields!',
+                        icon: 'error',
+                        confirmButtonColor: '#D19C97'
+                    });
+                    return;
+                }
+
+                // Simple email validation
+                if (!email.includes('@') || !email.includes('.')) {
+                    Swal.fire({
+                        title: 'Validation Error',
+                        text: 'Please enter a valid email address!',
+                        icon: 'error',
+                        confirmButtonColor: '#D19C97'
+                    });
+                    return;
+                }
+
+                // Password length validation
+                if (password.length < 6) {
+                    Swal.fire({
+                        title: 'Validation Error',
+                        text: 'Password must be at least 6 characters long!',
+                        icon: 'error',
+                        confirmButtonColor: '#D19C97'
+                    });
+                    return;
+                }
+
+                // Show loading state
+                var $btn = $('button[type="submit"]');
+                var originalText = $btn.text();
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2" role="status"></span>Logging in...');
+
+                // AJAX request for login - using existing register_user_action.php
+                $.ajax({
+                    url: '../actions/register_user_action.php',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {
+                        email: email,
+                        password: password
+                        // Note: No 'name' field sent, so the PHP will detect this as a login request
+                    },
+                    success: function(response) {
+                        console.log('=== SERVER RESPONSE (SUCCESS) ===');
+                        console.log('Full Response:', response);
+                        console.log('Status:', response.status);
+                        console.log('Message:', response.message);
+
+                        if (response.status === 'success') {
+                            Swal.fire({
+                                title: 'Success!',
+                                text: response.message,
+                                icon: 'success',
+                                confirmButtonColor: '#D19C97',
+                                timer: 2000,
+                                timerProgressBar: true
+                            }).then(() => {
+                                window.location.href = '../index.php';
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Login Failed',
+                                text: response.message,
+                                icon: 'error',
+                                confirmButtonColor: '#D19C97'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('=== AJAX ERROR ===');
+                        console.log('Status:', status);
+                        console.log('Error:', error);
+                        console.log('Response Text:', xhr.responseText);
+                        console.log('Status Code:', xhr.status);
+
+                        Swal.fire({
+                            title: 'Connection Error',
+                            text: 'Failed to connect to server. Please try again.',
+                            icon: 'error',
+                            confirmButtonColor: '#D19C97'
+                        });
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false).text(originalText);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
